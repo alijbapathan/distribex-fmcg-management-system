@@ -1,0 +1,45 @@
+Generate a full-stack **MERN-style project** (React frontend + Node.js/Express backend + PostgreSQL database instead of MongoDB).  
+The app is for a real-world **grocery distributed agency system** (Hindustan Unilever context).  
+Provide a single repository with two folders: `/server` and `/client`.
+
+🔑 CORE REQUIREMENTS
+- Tech stack:
+  - Backend: Node.js, Express, PostgreSQL (use Prisma ORM preferred, else Sequelize).
+  - Frontend: React (with Vite or CRA), TailwindCSS, shadcn/ui (or Material UI if simpler), Framer Motion for animations.
+  - Auth: JWT-based authentication with access + refresh tokens, bcrypt for password hashing.
+  - Email verification (using Nodemailer + SMTP creds from env).
+  - Role-based auth: "customer", "retailer", "agency_admin", "staff".
+  - Indian currency formatting (INR).
+  - Deployment-ready on Replit (no MongoDB, only PostgreSQL).
+
+🛠 BACKEND FEATURES (/server)
+- PostgreSQL schema with Prisma/Sequelize:
+  - User: id, name, email, passwordHash, role, isVerified, createdAt.
+  - Category: id, name, slug.
+  - Product: id, name, description, price, stock, categoryId, expiryDate, nearExpiry, discountPercent, createdAt.
+  - Cart: id, userId, items (relation to CartItem).
+  - CartItem: productId, qty, priceAtAdd.
+  - Order: id, userId, items[], shippingAddress, status, paymentStatus, totalAmount.
+- Auth APIs: register (with email verify), login, logout, refresh token, password reset.
+- Product APIs: CRUD (admin), category filter, expiry check.
+- Expiry logic: if product expiryDate is within X days (configurable from env), mark `nearExpiry=true` and apply discountPercent automatically.
+- Cart & Orders: add-to-cart, checkout, shipping, status updates.
+- Reports APIs: low-stock, near-expiry, sales summary.
+- Middleware: JWT auth, role check, error handler.
+- Email verification flow with token link.
+- Config via `.env` (PostgreSQL_URL, JWT_SECRET, SMTP creds, etc).
+
+🎨 FRONTEND FEATURES (/client)
+- Modern attractive UI with Tailwind + shadcn/ui.
+- Landing page: Hero, categories grid, featured products.
+- Auth pages: Register (with email verification notice), Login, Forgot/Reset password.
+- Category view: Click category → see products grid.
+- Product listing: filters (category, near-expiry toggle, price sort), big cards with expiry badge & discount ribbon.
+- Product detail page: carousel images, add-to-cart.
+- Cart page: edit qty, apply discounts, INR pricing.
+- Checkout flow: shipping address form → order summary → confirm → success page.
+- Profile page: order history, saved addresses.
+- Admin dashboard: charts (Recharts), manage products, view low-stock/near-expiry lists, manage orders/users.
+- Smooth UI with Framer Motion animations and skeleton loaders.
+
+⚙ ENVIRONMENT VARIABLES (.env.example)
