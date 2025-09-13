@@ -97,12 +97,21 @@ export function setupAuth(app: Express) {
         verificationToken,
       });
 
-      // Send verification email
-      await sendVerificationEmail(user.email, user.name, verificationToken);
+      // Send verification email (gracefully handle failures)
+      const emailResult = await sendVerificationEmail(user.email, user.name, verificationToken);
+      
+      let message = "Registration successful!";
+      if (emailResult.sent) {
+        message = "Registration successful. Please check your email to verify your account.";
+      } else {
+        message = "Registration successful. Email verification is currently unavailable. Please contact support to verify your account.";
+        console.log(`[DEV MODE] Manual verification URL for ${user.email}: http://localhost:5000/verify-email/${verificationToken}`);
+      }
 
       res.status(201).json({ 
-        message: "Registration successful. Please check your email to verify your account.",
-        userId: user.id
+        message,
+        userId: user.id,
+        emailSent: emailResult.sent
       });
     } catch (error: any) {
       if (error.name === "ZodError") {

@@ -7,6 +7,7 @@ import { AuthProvider } from "./hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import VerifyEmailPage from "@/pages/verify-email-page";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ProductsPage from "@/pages/products-page";
 import CartPage from "@/pages/cart-page";
@@ -24,6 +25,7 @@ function Router() {
       <ProtectedRoute path="/checkout" component={() => <CheckoutPage />} />
       <ProtectedRoute path="/profile" component={() => <ProfilePage />} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/verify-email/:token" component={VerifyEmailPage} />
       <Route component={NotFound} />
     </Switch>
   );
