@@ -16,19 +16,21 @@ import ProfilePage from "@/pages/profile-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  return (
-    <Switch>
-      <ProtectedRoute path="/" component={() => <HomePage />} />
-      <ProtectedRoute path="/admin" component={() => <AdminDashboard />} />
-      <ProtectedRoute path="/products" component={() => <ProductsPage />} />
-      <ProtectedRoute path="/cart" component={() => <CartPage />} />
-      <ProtectedRoute path="/checkout" component={() => <CheckoutPage />} />
-      <ProtectedRoute path="/profile" component={() => <ProfilePage />} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/verify-email/:token" component={VerifyEmailPage} />
-      <Route component={NotFound} />
-    </Switch>
-  );
+  return (
+    <Switch>
+      <ProtectedRoute path="/" component={() => <HomePage />} />
+      {/* 🚨 FIX: Add dynamic route for single product viewing */}
+      <ProtectedRoute path="/products/:id" component={() => <ProductsPage />} /> 
+      <ProtectedRoute path="/products" component={() => <ProductsPage />} />
+      <ProtectedRoute path="/admin" component={() => <AdminDashboard />} />
+      <ProtectedRoute path="/cart" component={() => <CartPage />} />
+      <ProtectedRoute path="/checkout" component={() => <CheckoutPage />} />
+      <ProtectedRoute path="/profile" component={() => <ProfilePage />} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/verify-email/:token" component={VerifyEmailPage} />
+      <Route component={NotFound} />
+    </Switch>
+  );
 }
 
 function App() {
