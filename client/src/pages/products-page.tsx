@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Product, Category } from "@shared/schema";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
-import { useLocation } from "wouter"; // FIX: Import useLocation
+import { useLocation } from "wouter"; 
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,50 +21,42 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<"name" | "price" | "stock">("name");
   const [showFilters, setShowFilters] = useState(false);
 
-  // FIX 1: Read the current location (URL)
-  const [location] = useLocation();
+  // FIX 1: Read the current location (URL)
+  const [location] = useLocation();
 
-  // FIX 2: Check URL query on initial load/location change
-  // This reads the 'categoryId' from the URL (e.g., /products?categoryId=ID)
-  useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1]);
-    const categoryIdFromUrl = params.get('categoryId'); 
-    
-    // If a category filter is found in the URL, set the state
-    if (categoryIdFromUrl && categoryIdFromUrl !== selectedCategory) {
-      setSelectedCategory(categoryIdFromUrl);
-    }
-    // IMPORTANT: When navigating to a product detail page like /products/ID, 
-    // there is no '?' in the URL, so this logic ensures the filters are cleared 
-    // when viewing a detail page.
-    if (!location.includes('?') && selectedCategory !== 'all') {
+  // FIX 2: Check URL query on initial load/location change
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1]);
+    const categoryIdFromUrl = params.get('categoryId'); 
+    
+    // Agar URL mein categoryId hai, toh state set karein
+    if (categoryIdFromUrl && categoryIdFromUrl !== selectedCategory) {
+      setSelectedCategory(categoryIdFromUrl);
+    } 
+    // Agar URL mein koi query parameter nahi hai aur hum products page par hain, toh reset karein
+    else if (!location.includes('?') && selectedCategory !== 'all' && location === '/products') {
         setSelectedCategory('all');
     }
-  }, [location, selectedCategory]); 
+  }, [location]); 
 
   // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
-  // Fetch products with filters
+  // Fetch products with filters (Backend filtering)
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products", { 
-      // FIX 3: Use the selectedCategory state (which is updated from the URL)
+      // categoryId ko useQuery key aur backend ko bhej rahe hain
       categoryId: selectedCategory === "all" ? undefined : selectedCategory,
       nearExpiry: showNearExpiry || undefined,
       search: searchQuery || undefined 
     }],
   });
 
-  // Filter and sort products on client side
+  // FIX 3: Client-side filtering hata diya gaya hai. Ab sirf sorting hoga.
+  // Products variable mein already filtered data aa raha hai backend se.
   const filteredProducts = products
-    .filter(product => {
-      if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      return true;
-    })
     .sort((a, b) => {
       switch (sortBy) {
         case "price":
