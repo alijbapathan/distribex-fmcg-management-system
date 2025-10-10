@@ -4,6 +4,8 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema, insertOrderSchema } from "@shared/schema";
 import { startExpiryChecker } from "./services/expiry-checker";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
@@ -33,6 +35,42 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: error.issues[0].message });
       }
       res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  app.put("/api/categories/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const updates = insertCategorySchema.partial().parse(req.body);
+      const category = await storage.updateCategory(req.params.id, updates);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      res.json(category);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: error.issues[0].message });
+      }
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const success = await storage.deleteCategory(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete category" });
     }
   });
 
@@ -284,6 +322,128 @@ export function registerRoutes(app: Express): Server {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  // MARK: teacher-review - User Management API
+  app.get("/api/admin/users", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/users", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const { name, email, password, role } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      // Hash password like in auth.ts
+      const scryptAsync = promisify(scrypt);
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+
+      const user = await storage.createUser({ 
+        name, 
+        email, 
+        password: hashedPassword, 
+        role: role || "customer",
+        isVerified: true,
+      } as any);
+      res.status(201).json(user);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create user" });
+    }
+  });
+
+  app.put("/api/admin/users/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const { name, email, role } = req.body;
+      const user = await storage.updateUser(req.params.id, { name, email, role });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const success = await storage.deleteUser(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // MARK: teacher-review - Reports API
+  app.get("/api/admin/reports", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const { type, range } = req.query;
+      const days = parseInt(range as string) || 30;
+      
+      // Generate sample report data based on type
+      const reportData = await storage.generateReport(type as string, days);
+      res.json(reportData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate report" });
+    }
+  });
+
+  app.get("/api/admin/reports/export", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== "agency_admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const { type, range, format } = req.query;
+      const days = parseInt(range as string) || 30;
+      
+      // Generate and return report file
+      const reportBuffer = await storage.exportReport(type as string, format as string, days);
+      
+      const contentType = format === "pdf" ? "application/pdf" : 
+                         format === "csv" ? "text/csv" : 
+                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="report.${format}"`);
+      res.send(reportBuffer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to export report" });
     }
   });
 
