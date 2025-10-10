@@ -59,6 +59,15 @@ export interface IStorage {
   getOrderStats(): Promise<{ totalRevenue: number; totalOrders: number; averageOrder: number }>;
   getCategorySales(): Promise<{ categoryId: string; categoryName: string; totalSales: number }[]>;
 
+  // Admin - users
+  getUsers(): Promise<User[]>;
+  updateUser(id: string, updates: Partial<Pick<User, "name" | "email" | "role">>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
+
+  // Admin - reports
+  generateReport(type: string, days: number): Promise<any>;
+  exportReport(type: string, format: string, days: number): Promise<Buffer>;
+
   sessionStore: Store;
 }
 
@@ -421,6 +430,93 @@ export class DatabaseStorage implements IStorage {
     // This would require parsing the JSON items in orders
     // For now, return empty array - would need more complex SQL
     return [];
+  }
+
+  // MARK: Admin - users
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async updateUser(id: string, updates: Partial<Pick<User, "name" | "email" | "role">>): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(users.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // MARK: Admin - reports (basic implementation backed by orders)
+  async generateReport(type: string, days: number): Promise<any> {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const recentOrders = await db
+      .select()
+      .from(orders)
+      .where(sql`${orders.createdAt} >= ${since}`)
+      .orderBy(asc(orders.createdAt));
+
+    // Aggregate by month for simple charts
+    const monthlyMap = new Map<string, { sales: number; orders: number }>();
+    for (const o of recentOrders) {
+      const d = new Date(o.createdAt as unknown as string);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const current = monthlyMap.get(key) || { sales: 0, orders: 0 };
+      current.sales += parseFloat((o.totalAmount as any).toString());
+      current.orders += 1;
+      monthlyMap.set(key, current);
+    }
+
+    const salesData = Array.from(monthlyMap.entries()).map(([k, v]) => ({ month: k, sales: v.sales, orders: v.orders }));
+
+    const orderStats = {
+      totalOrders: recentOrders.length,
+      pendingOrders: recentOrders.filter(o => o.status === "pending").length,
+      completedOrders: recentOrders.filter(o => o.status === "delivered").length,
+      totalRevenue: recentOrders.reduce((sum, o) => sum + parseFloat((o.totalAmount as any).toString()), 0),
+    };
+
+    // Minimal placeholders
+    const categoryData = [
+      { name: "Personal Care", value: 35, color: "hsl(var(--primary))" },
+      { name: "Home Care", value: 25, color: "hsl(var(--secondary))" },
+      { name: "Foods & Beverages", value: 20, color: "hsl(var(--accent))" },
+      { name: "Ice Cream", value: 12, color: "hsl(var(--chart-4))" },
+      { name: "Beauty", value: 8, color: "hsl(var(--chart-5))" },
+    ];
+
+    const topProducts = [] as Array<{ name: string; sales: number; revenue: number }>;
+
+    const userStats = {
+      totalUsers: (await db.select({ count: sql<number>`COUNT(*)` }).from(users))[0].count,
+      newUsers: 0,
+      activeUsers: 0,
+    };
+
+    return { salesData, categoryData, topProducts, userStats, orderStats };
+  }
+
+  async exportReport(type: string, format: string, days: number): Promise<Buffer> {
+    const data = await this.generateReport(type, days);
+    if (format === "csv") {
+      const rows = [
+        "month,sales,orders",
+        ...data.salesData.map((r: any) => `${r.month},${r.sales},${r.orders}`),
+      ];
+      return Buffer.from(rows.join("\n"), "utf8");
+    }
+    // For pdf/xlsx, return csv as a fallback
+    const rows = [
+      "month,sales,orders",
+      ...data.salesData.map((r: any) => `${r.month},${r.sales},${r.orders}`),
+    ];
+    return Buffer.from(rows.join("\n"), "utf8");
   }
 }
 
