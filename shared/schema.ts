@@ -128,6 +128,9 @@ export const insertProductSchema = createInsertSchema(products).omit({
   createdAt: true,
   updatedAt: true,
   nearExpiry: true,
+}).extend({
+  // Override expiryDate to accept string and convert to Date
+  expiryDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
 export const insertCartSchema = createInsertSchema(carts).omit({
