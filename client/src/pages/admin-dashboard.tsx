@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                 asChild
                 data-testid="button-add-product"
               >
-                <Link href="/admin/products/new">
+                <Link href="/admin/add-product">
                   <Plus className="mr-3 h-4 w-4 text-primary" />
                   Add New Product
                 </Link>
@@ -123,10 +123,13 @@ export default function AdminDashboard() {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start"
+                asChild
                 data-testid="button-manage-categories"
               >
-                <Tags className="mr-3 h-4 w-4 text-accent" />
-                Manage Categories
+                <Link href="/admin/manage-categories">
+                  <Tags className="mr-3 h-4 w-4 text-accent" />
+                  Manage Categories
+                </Link>
               </Button>
               <Button 
                 variant="ghost" 
@@ -134,7 +137,7 @@ export default function AdminDashboard() {
                 asChild
                 data-testid="button-view-orders"
               >
-                <Link href="/admin/orders">
+                <Link href="/admin/view-orders">
                   <List className="mr-3 h-4 w-4 text-secondary" />
                   View All Orders
                 </Link>
@@ -142,18 +145,24 @@ export default function AdminDashboard() {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start"
+                asChild
                 data-testid="button-manage-users"
               >
-                <Users className="mr-3 h-4 w-4 text-primary" />
-                Manage Users
+                <Link href="/admin/manage-users">
+                  <Users className="mr-3 h-4 w-4 text-primary" />
+                  Manage Users
+                </Link>
               </Button>
               <Button 
                 variant="ghost" 
                 className="w-full justify-start"
+                asChild
                 data-testid="button-generate-reports"
               >
-                <BarChart className="mr-3 h-4 w-4 text-accent" />
-                Generate Reports
+                <Link href="/admin/generate-reports">
+                  <BarChart className="mr-3 h-4 w-4 text-accent" />
+                  Generate Reports
+                </Link>
               </Button>
             </CardContent>
           </Card>
