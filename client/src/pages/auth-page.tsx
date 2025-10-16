@@ -263,8 +263,7 @@ export default function AuthPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="customer">Customer</SelectItem>
-                          <SelectItem value="retailer">Retailer</SelectItem>
-                          <SelectItem value="staff">Staff Member</SelectItem>
+                         
                         </SelectContent>
                       </Select>
                     </div>

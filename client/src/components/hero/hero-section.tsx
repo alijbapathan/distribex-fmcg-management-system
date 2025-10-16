@@ -53,14 +53,7 @@ export function HeroSection() {
                 Browse Products
               </Link>
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="border-white/30 hover:bg-white/10 text-white px-8 py-3"
-              data-testid="button-become-retailer"
-            >
-              Become a Retailer
-            </Button>
+            
           </motion.div>
         </motion.div>
       </div>
