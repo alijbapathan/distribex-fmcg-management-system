@@ -72,9 +72,13 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: string, done) => {
     try {
       const user = await storage.getUser(id);
+      // If user no longer exists, return false (not an error) so passport doesn't crash
+      if (!user) return done(null, false);
       done(null, user);
     } catch (error) {
-      done(error);
+      console.error('Error deserializing user:', error);
+      // Return no user on error to avoid crashing the whole server
+      return done(null, false);
     }
   });
 
@@ -138,6 +142,58 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Plain HTML verification page (so email links work even if SPA fails to load)
+  app.get("/verify-email/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const user = await storage.getUserByVerificationToken(token);
+
+      if (!user) {
+        return res.status(400).send(`
+          <html>
+            <head><title>Verification Failed</title></head>
+            <body style="font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+              <div style="max-width:600px;text-align:center;padding:20px;border:1px solid #eee;border-radius:8px;">
+                <h1 style="color:#e11d48">Verification Failed</h1>
+                <p>The verification link is invalid or has expired.</p>
+                <p><a href="/auth">Go to Sign In / Register</a></p>
+              </div>
+            </body>
+          </html>
+        `);
+      }
+
+      await storage.verifyUser(user.id);
+
+      return res.send(`
+        <html>
+          <head><title>Verification Successful</title></head>
+          <body style="font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+            <div style="max-width:600px;text-align:center;padding:20px;border:1px solid #eee;border-radius:8px;">
+              <h1 style="color:#10b981">Email Verified</h1>
+              <p>Thank you, your email has been verified. You can now sign in to your account.</p>
+              <p><a href="/auth">Continue to Sign In</a></p>
+            </div>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error('Error in HTML verify route:', error);
+      return res.status(500).send(`
+        <html>
+          <head><title>Server Error</title></head>
+          <body style="font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+            <div style="max-width:600px;text-align:center;padding:20px;border:1px solid #eee;border-radius:8px;">
+              <h1 style="color:#ef4444">Server Error</h1>
+              <p>Something went wrong while verifying your email. Please try again later.</p>
+              <p><a href="/auth">Go to Sign In</a></p>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+  });
+
   app.post("/api/login", (req, res, next) => {
     const validatedData = loginSchema.safeParse(req.body);
     if (!validatedData.success) {
@@ -190,6 +246,94 @@ export function setupAuth(app: Express) {
       res.json({ message: "Verification email sent successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Change password endpoint
+  app.post("/api/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters long" });
+      }
+
+      // Verify current password
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isCurrentPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await hashPassword(newPassword);
+      
+      // Update password
+      await storage.updateUser(req.user.id, { password: hashedNewPassword } as any);
+      
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  // Delete account endpoint
+  app.delete("/api/delete-account", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { password } = req.body;
+      
+      if (!password) {
+        return res.status(400).json({ message: "Password confirmation is required" });
+      }
+
+      // Verify password
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isPasswordValid = await comparePasswords(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Password is incorrect" });
+      }
+
+      // Delete user account and all related data
+      console.log(`Attempting to delete user account: ${req.user.id}`);
+      const success = await storage.deleteUser(req.user.id);
+      console.log(`Delete user result: ${success}`);
+      
+      if (!success) {
+        console.error(`Failed to delete user account: ${req.user.id}`);
+        return res.status(500).json({ message: "Failed to delete account. Please try again." });
+      }
+
+      // Logout user after successful deletion
+      req.logout((err) => {
+        if (err) {
+          console.error("Error during logout after account deletion:", err);
+        }
+      });
+
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      res.status(500).json({ message: "Failed to delete account. Please try again." });
     }
   });
 }

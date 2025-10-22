@@ -61,7 +61,7 @@ export interface IStorage {
 
   // Admin - users
   getUsers(): Promise<User[]>;
-  updateUser(id: string, updates: Partial<Pick<User, "name" | "email" | "role">>): Promise<User | undefined>;
+  updateUser(id: string, updates: Partial<Pick<User, "name" | "email" | "role" | "password">>): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
 
   // Admin - reports
@@ -75,8 +75,10 @@ export class DatabaseStorage implements IStorage {
   public sessionStore: Store;
 
   constructor() {
+    // connect-pg-simple expects a pg.Pool; our neon serverless Pool has a different shape.
+    // Cast to any to satisfy the library typings at runtime it's compatible for session storage.
     this.sessionStore = new PostgresSessionStore({ 
-      pool, 
+      pool: pool as any, 
       createTableIfMissing: true 
     });
   }
@@ -221,6 +223,15 @@ export class DatabaseStorage implements IStorage {
       .insert(products)
       .values(product)
       .returning();
+
+    // Immediately evaluate near-expiry status for newly created product
+    try {
+      // expiryDate from DB is Date | null
+      await this.evaluateAndSetNearExpiry(newProduct.id, newProduct.expiryDate as unknown as Date | null);
+    } catch (err) {
+      console.error('Failed to evaluate near-expiry on product create:', err);
+    }
+
     return newProduct;
   }
 
@@ -230,6 +241,14 @@ export class DatabaseStorage implements IStorage {
       .set({ ...updates, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(products.id, id))
       .returning();
+    if (product) {
+      try {
+        await this.evaluateAndSetNearExpiry(product.id, product.expiryDate as unknown as Date | null);
+      } catch (err) {
+        console.error('Failed to evaluate near-expiry on product update:', err);
+      }
+    }
+
     return product || undefined;
   }
 
@@ -261,6 +280,42 @@ export class DatabaseStorage implements IStorage {
           eq(products.nearExpiry, false)
         )
       );
+  }
+
+  // Evaluate a single product's expiry and update nearExpiry/discount immediately.
+  // This is used after manual create/update so products become "near expiry" without waiting for cron.
+  private async evaluateAndSetNearExpiry(productId: string, expiryDate: Date | null): Promise<void> {
+    try {
+      const nearExpiryDays = parseInt(process.env.NEAR_EXPIRY_DAYS || "7");
+      const discountPercent = parseFloat(process.env.NEAR_EXPIRY_DISCOUNT_PERCENT || "20");
+
+      if (!expiryDate) {
+        // If no expiry date, ensure flags are cleared
+        await db.update(products).set({ nearExpiry: false, discountPercent: "0", updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(products.id, productId));
+        return;
+      }
+
+      const now = new Date();
+      // Only compare dates (ignore time) so that products expiring today are considered near-expiry
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const expiry = new Date(expiryDate.getFullYear(), expiryDate.getMonth(), expiryDate.getDate());
+
+      const diffMs = expiry.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= nearExpiryDays && diffDays >= 0) {
+        // within window (including today)
+        await db.update(products).set({ nearExpiry: true, discountPercent: discountPercent.toString(), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(products.id, productId));
+      } else if (diffDays < 0) {
+        // already expired - still mark nearExpiry true? we'll keep it true but could be handled separately
+        await db.update(products).set({ nearExpiry: true, discountPercent: discountPercent.toString(), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(products.id, productId));
+      } else {
+        // not near expiry
+        await db.update(products).set({ nearExpiry: false, discountPercent: "0", updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(products.id, productId));
+      }
+    } catch (err) {
+      console.error('Error in evaluateAndSetNearExpiry:', err);
+    }
   }
 
   // Cart methods
@@ -437,7 +492,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async updateUser(id: string, updates: Partial<Pick<User, "name" | "email" | "role">>): Promise<User | undefined> {
+  async updateUser(id: string, updates: Partial<Pick<User, "name" | "email" | "role" | "password">>): Promise<User | undefined> {
     const [updated] = await db
       .update(users)
       .set({ ...updates, updatedAt: sql`CURRENT_TIMESTAMP` })
@@ -447,8 +502,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: string): Promise<boolean> {
-    const result = await db.delete(users).where(eq(users.id, id));
-    return (result.rowCount ?? 0) > 0;
+    try {
+      console.log(`Starting deletion process for user: ${id}`);
+      
+      // Use a transaction to ensure all deletions happen atomically
+      const result = await db.transaction(async (tx) => {
+        // First, get the user's cart to delete cart items
+        const userCarts = await tx.select().from(carts).where(eq(carts.userId, id));
+        console.log(`Found ${userCarts.length} carts for user`);
+        
+        // Delete cart items for each cart
+        for (const cart of userCarts) {
+          const cartItemsResult = await tx.delete(cartItems).where(eq(cartItems.cartId, cart.id));
+          console.log(`Deleted cart items for cart ${cart.id}: ${cartItemsResult.rowCount} items`);
+        }
+        
+        // Delete user's carts
+        const cartsResult = await tx.delete(carts).where(eq(carts.userId, id));
+        console.log(`Deleted carts: ${cartsResult.rowCount} carts`);
+        
+        // Delete user's orders
+        const ordersResult = await tx.delete(orders).where(eq(orders.userId, id));
+        console.log(`Deleted orders: ${ordersResult.rowCount} orders`);
+        
+        // Finally, delete the user
+        const userResult = await tx.delete(users).where(eq(users.id, id));
+        console.log(`Deleted user: ${userResult.rowCount} users`);
+        
+        return userResult.rowCount ?? 0;
+      });
+      
+      return result > 0;
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        stack: error?.stack,
+        code: error?.code
+      });
+      return false;
+    }
   }
 
   // MARK: Admin - reports (basic implementation backed by orders)

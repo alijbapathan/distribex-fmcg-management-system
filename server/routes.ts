@@ -7,6 +7,7 @@ import { bulkImportProductsFromBuffer } from "./services/bulk-import.service"; /
 
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { sendOrderConfirmationEmail } from "./services/email";
 import { insertProductSchema, insertCategorySchema, insertOrderSchema } from "@shared/schema";
 import { startExpiryChecker } from "./services/expiry-checker";
 import { scrypt, randomBytes } from "crypto";
@@ -311,12 +312,27 @@ app.post(
         userId: req.user.id
       });
       
-      const order = await storage.createOrder(orderData);
-      
-      // Clear cart after successful order
-      await storage.clearCart(req.user.id);
-      
-      res.status(201).json(order);
+      const order = await storage.createOrder(orderData);
+
+      // Clear cart after successful order
+      await storage.clearCart(req.user.id);
+
+      // Send order confirmation email (do not block the response)
+      (async () => {
+        try {
+          if (req.user && req.user.email) {
+            await sendOrderConfirmationEmail(req.user.email, req.user.name || req.user.email, {
+              id: (order as any).id,
+              totalAmount: (order as any).totalAmount,
+              items: (order as any).items || []
+            });
+          }
+        } catch (err) {
+          console.error('Error sending order confirmation email:', err);
+        }
+      })();
+
+      res.status(201).json(order);
     } catch (error: any) {
       if (error.name === "ZodError") {
         return res.status(400).json({ message: error.issues[0].message });

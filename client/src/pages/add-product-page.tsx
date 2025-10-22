@@ -47,10 +47,10 @@ export default function AddProductPage() {
     }
   }, [user, setLocation]);
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ["/api/categories"],
-    enabled: user?.role === "agency_admin",
-  });
+  const { data: categories = [] as Array<{ id: string; name: string }> } = useQuery<Array<{ id: string; name: string }>>({
+    queryKey: ["/api/categories"],
+    enabled: user?.role === "agency_admin",
+  });
 
   const {
     register,

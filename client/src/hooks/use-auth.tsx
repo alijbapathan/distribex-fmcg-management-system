@@ -14,6 +14,8 @@ type AuthContextType = {
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginCredentials>;
   logoutMutation: UseMutationResult<void, Error, void>;
+  // convenience wrapper used by components to log the user out
+  logout: () => Promise<void>;
   registerMutation: UseMutationResult<any, Error, RegisterCredentials>;
   resendVerificationMutation: UseMutationResult<any, Error, { email: string }>;
 };
@@ -121,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error,
         loginMutation,
         logoutMutation,
+        logout: async () => logoutMutation.mutateAsync(),
         registerMutation,
         resendVerificationMutation,
       }}

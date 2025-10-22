@@ -70,8 +70,32 @@ export async function bulkImportProductsFromBuffer(csvBuffer: Buffer): Promise<{
       const categoryId = getDbValue(product.category_id);
       const imageUrl = getDbValue(product.image_url);
       const expiryDate = getDbValue(product.expiry_date);
-      const nearExpiry = getDbValue(product.near_expiry);
-      const discountPercent = product.discount_percent ? parseFloat(product.discount_percent) : 0;
+      // Compute near-expiry/discount automatically if expiry date present
+      let nearExpiryFlag: boolean | null = null;
+      let computedDiscount = 0;
+      if (expiryDate) {
+        const nearExpiryDays = parseInt(process.env.NEAR_EXPIRY_DAYS || "7", 10);
+        const discountPercentEnv = parseFloat(process.env.NEAR_EXPIRY_DISCOUNT_PERCENT || "20");
+        const today = new Date();
+        const expiry = new Date(expiryDate as string);
+        const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const e = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+        const diffMs = e.getTime() - t.getTime();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays <= nearExpiryDays && diffDays >= 0) {
+          nearExpiryFlag = true;
+          computedDiscount = discountPercentEnv;
+        } else if (diffDays < 0) {
+          nearExpiryFlag = true; // expired
+          computedDiscount = discountPercentEnv;
+        } else {
+          nearExpiryFlag = false;
+          computedDiscount = 0;
+        }
+      }
+
+      const nearExpiry = nearExpiryFlag !== null ? nearExpiryFlag : getDbValue(product.near_expiry);
+      const discountPercent = product.discount_percent ? parseFloat(product.discount_percent) : computedDiscount;
 
       // Validation
       if (!product.name || !categoryId || isNaN(priceValue) || isNaN(stockQuantity)) {
@@ -95,8 +119,8 @@ export async function bulkImportProductsFromBuffer(csvBuffer: Buffer): Promise<{
       try {
         await client.query(insertQuery, values);
         successfulInserts++;
-      } catch (err) {
-        console.error(`[DB ERROR] Product "${product.name}" not inserted:`, err.message);
+      } catch (err: any) {
+        console.error(`[DB ERROR] Product "${product.name}" not inserted:`, err.message || err);
         skippedRecords++;
       }
     }
@@ -105,9 +129,9 @@ export async function bulkImportProductsFromBuffer(csvBuffer: Buffer): Promise<{
     console.log(`🎉 Bulk import finished. ${successfulInserts} inserted, ${skippedRecords} skipped.`);
     return { successfulInserts, skippedRecords };
 
-  } catch (err) {
-    if (client) await client.query('ROLLBACK').catch(e => console.error('Rollback failed:', e));
-    console.error('❌ FINAL DATABASE ERROR:', err.message);
+  } catch (err: any) {
+    if (client) await client.query('ROLLBACK').catch((e: any) => console.error('Rollback failed:', e));
+    console.error('❌ FINAL DATABASE ERROR:', err.message || err);
     throw err;
   } finally {
     if (client) await client.end();

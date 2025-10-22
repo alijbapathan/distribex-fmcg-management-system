@@ -1,42 +1,44 @@
 id,name,category_id,price,stock,expiry_date,image_url,description,brand
 1,Magnum Classic Ice Cream (80ml),194b488d-af7f-4dad-9eaf-254d579b259d,120.00,1000,2026-10-20,https://www.bbassets.com/media/uploads/p/xl/40336289_2-kwality-walls-magnum-classic-ice-cream.jpg,Rich vanilla ice cream with thick chocolate coating,Magnum
 
-2,Kwality Wall's Cornetto D. Choco,194b488d-af7f-4dad-9eaf-254d579b259d,60.00,1500,2026-09-15,https://placehold.co/400x400/775F4D/FFFFFF/png?text=CORNETTO+DOUBLE+CHOC,Double chocolate flavor in a crispy cone,Kwality Wall's
+2,Kwality Wall's Cornetto D. Choco,194b488d-af7f-4dad-9eaf-254d579b259d,60.00,1500,2026-09-15,https://i.ibb.co/gZm0dqw7/cornetto.jpg,Double chocolate flavor in a crispy cone,Kwality Wall's
 
-3,Kwality Wall's Feast Choco Bar,194b488d-af7f-4dad-9eaf-254d579b259d,35.00,2200,2026-11-01,https://placehold.co/400x400/944E4E/FFFFFF/png?text=FEAST+CHOCO+BAR,Chocolat bar with crunchy nuts,Kwality Wall's
+3,Kwality Wall's Feast Choco Bar,194b488d-af7f-4dad-9eaf-254d579b259d,35.00,2200,2026-11-01,https://i.ibb.co/BVW52VnK/fds.jpg,Chocolat bar with crunchy nuts,Kwality Wall's
 
-4,Kwality Wall's Vanilla Tub (500ml),194b488d-af7f-4dad-9eaf-254d579b259d,199.00,800,2026-12-05,https://placehold.co/400x400/E1E1E1/000000/png?text=VANILLA+TUB+500ML,Classic creamy vanilla flavor family tub,Kwality Wall's
-5,Kwality Wall's Paddle Pop (120ml),194b488d-af7f-4dad-9eaf-254d579b259d,25.00,3000,2027-01-20,https://placehold.co/400x400/5E96A6/FFFFFF/png?text=PADDLE+POP,Fun fruity ice candy for kids,Kwality Wall's
+4,Kwality Wall's Vanilla Tub (500ml),194b488d-af7f-4dad-9eaf-254d579b259d,199.00,800,2026-12-05,https://i.ibb.co/60p6vgpz/cornetto.jpg,Classic creamy vanilla flavor family tub,Kwality Wall's
 
-6,Lakmé 9 to 5 Primer + Matte Powder,2727e070-fe00-4cd7-a69f-020404886af3,499.00,550,2027-04-10,https://placehold.co/400x400/F08080/FFFFFF/png?text=LAKME+MATTE+POWDER,Primer and powder for a smooth finish,Lakmé
+5,Kwality Wall's Paddle Pop (120ml),194b488d-af7f-4dad-9eaf-254d579b259d,25.00,3000,2027-01-20,https://i.ibb.co/hFB0mJGT/feast.jpg,Fun fruity ice candy for kids,Kwality Wall's
 
-7,Lakmé Absolute Matte Lipstick,2727e070-fe00-4cd7-a69f-020404886af3,850.00,300,2027-08-25,https://placehold.co/400x400/C2203E/FFFFFF/png?text=LAKME+ABSOLUTE+LIPSTICK,Long-lasting matte finish lipstick,Lakmé
+6,Lakmé 9 to 5 Primer + Matte Powder,2727e070-fe00-4cd7-a69f-020404886af3,499.00,550,2027-04-10,https://i.ibb.co/SwNfKBvV/dbhd.webp,Primer and powder for a smooth finish,Lakmé
 
-8,Lakmé Sun Expert SPF 50,2727e070-fe00-4cd7-a69f-020404886af3,399.00,1200,2026-11-15,https://placehold.co/400x400/FFD700/000000/png?text=LAKME+SUN+EXPERT+SPF50,High protection sunscreen gel,Lakmé
+7,Lakmé Absolute Matte Lipstick,2727e070-fe00-4cd7-a69f-020404886af3,850.00,300,2027-08-25,https://i.ibb.co/vCL68LHF/njdsk.jpg,Long-lasting matte finish lipstick,Lakmé
 
-9,Ponds Super Light Gel 100g,2727e070-fe00-4cd7-a69f-020404886af3,149.00,1800,2027-03-01,https://placehold.co/400x400/ADD8E6/000000/png?text=PONDS+SL+GEL,Non-stickyquick absorbing face moisturizer,Pond's
+8,Lakmé Sun Expert SPF 50,2727e070-fe00-4cd7-a69f-020404886af3,399.00,1200,2026-11-15,https://ibb.co/bMGcRKcr,High protection sunscreen gel,Lakmé
 
-10,Simple Kind to Skin Moisturiser 125ml,2727e070-fe00-4cd7-a69f-020404886af3,425.00,700,2027-06-12,https://placehold.co/400x400/FFFFFF/000000/png?text=SIMPLE+MOISTURISER,Gentlenon-comedogenic face lotion,Simple
+9,Ponds Super Light Gel 100g,2727e070-fe00-4cd7-a69f-020404886af3,149.00,1800,2027-03-01,https://i.ibb.co/670htJVh/sadf.webp,Non-stickyquick absorbing face moisturizer,Pond's
 
-11,Vim Dishwash Liquid (500ml),285370d7-5967-4bc2-b978-99c3dcc70ad3,85.00,2500,2027-05-01,https://placehold.co/400x400/9ACD32/000000/png?text=VIM+LIQUID+500ML,Superiorgrease cutting in liquid form,Vim
+10,Simple Kind to Skin Moisturiser 125ml,2727e070-fe00-4cd7-a69f-020404886af3,425.00,700,2027-06-12,https://i.ibb.co/TqTTv7VT/sdf.jpg,Gentlenon-comedogenic face lotion,Simple
 
-12,Vim Dishwash Bar (250g),285370d7-5967-4bc2-b978-99c3dcc70ad3,45.00,4500,2026-11-20,https://placehold.co/400x400/DAA520/FFFFFF/png?text=VIM+BAR+250G,Givesshine removes tough stains,Vim
+11,Vim Dishwash Liquid (500ml),285370d7-5967-4bc2-b978-99c3dcc70ad3,85.00,2500,2027-05-01,https://i.ibb.co/DP3w287D/asd.jpg,Superiorgrease cutting in liquid form,Vim
 
-13,Vim Anti-Bacterial Liquid 750ml,285370d7-5967-4bc2-b978-99c3dcc70ad3,140.00,1500,2027-02-14,https://placehold.co/400x400/5F9EA0/FFFFFF/png?text=VIM+ANTI-BAC,Kills99.9% germs power of lime,Vim
+12,Vim Dishwash Bar (250g),285370d7-5967-4bc2-b978-99c3dcc70ad3,45.00,4500,2026-11-20,https://i.ibb.co/H6qHTzP/sdfd.jpg,Givesshine removes tough stains,Vim
 
-14,Sunlight Dishwash Liquid (400ml),285370d7-5967-4bc2-b978-99c3dcc70ad3,70.00,2000,2027-04-22,https://placehold.co/400x400/8B4513/FFFFFF/png?text=SUNLIGHT+DISHWASH,Effective cleaning and refreshing fragrance,
+13,Vim Anti-Bacterial Liquid 750ml,285370d7-5967-4bc2-b978-99c3dcc70ad3,140.00,1500,2027-02-14,https://i.ibb.co/NdPp1VfQ/asd.jpg,Kills99.9% germs power of lime,Vim
+
+14,Sunlight Dishwash Liquid (400ml),285370d7-5967-4bc2-b978-99c3dcc70ad3,70.00,2000,2027-04-22,https://i.ibb.co/NdPp1VfQ/asd.jpg,Effective cleaning and refreshing fragrance,
 
 15,Vim Lemon Dishwash Liquid (1L),285370d7-5967-4bc2-b978-99c3dcc70ad3,165.00,1200,2027-01-10,https://placehold.co/400x400/FFD700/000000/png?text=VIM+LEMON+1L,Mega pack with powerful lemon action,Vim
 
-16,Horlicks Classic Malt (500g),321cb1fd-e337-4d16-a3ac-10920ed6e875,299.00,1000,2027-07-01,https://placehold.co/400x400/FF0000/FFFFFF/png?text=HORLICKS+MALT,A nutritional malt-based health drink,Horlicks
+16,Horlicks Classic Malt (500g),321cb1fd-e337-4d16-a3ac-10920ed6e875,299.00,1000,2027-07-01,https://i.ibb.co/933fTQXG/sdbjf.webp,A nutritional malt-based health drink,Horlicks
 
 17,Boost Health Drink (200g),321cb1fd-e337-4d16-a3ac-10920ed6e875,150.00,1500,2027-08-05,https://placehold.co/400x400/FF4500/FFFFFF/png?text=BOOST+200G,Increases stamina and energy,Boost
 
-18,Knorr Classic Sweet Corn Soup (43g),321cb1fd-e337-4d16-a3ac-10920ed6e875,60.00,2800,2026-10-15,https://placehold.co/400x400/F4A460/000000/png?text=KNORR+SWEET+CORN+SOUP,Quickand easy to make sweet corn soup,Knorr
+18,Knorr Classic Sweet Corn Soup (43g),321cb1fd-e337-4d16-a3ac-10920ed6e875,60.00,2800,2026-10-15,https://i.ibb.co/rRrkrmTk/asdbjweh.jpg,Quickand easy to make sweet corn soup,Knorr
 
-19,Horlicks Women's Plus (400g),321cb1fd-e337-4d16-a3ac-10920ed6e875,375.00,800,2027-05-20,https://placehold.co/400x400/FFC0CB/000000/png?text=HORLICKS+WOMEN,Designedto support women's bone health,Horlicks
+19,Horlicks Women's Plus (400g),321cb1fd-e337-4d16-a3ac-10920ed6e875,375.00,800,2027-05-20,https://i.ibb.co/s9rzSYpL/jdkhwpie.jpg,Designedto support women's bone health,Horlicks
 
-20,Knorr Classic Tomato Soup (43g),321cb1fd-e337-4d16-a3ac-10920ed6e875,55.00,3200,2026-11-01,https://placehold.co/400x400/B22222/FFFFFF/png?text=KNORR+TOMATO+SOUP,Richand creamy tomato soup mix,Knorr
+20,Knorr Classic Tomato Soup (43g),321cb1fd-e337-4d16-a3ac-10920ed6e875,55.00,3200,2026-11-01,https://i.ibb.co/35gGSL2q/bhjade.jpg,Richand creamy tomato soup mix,Knorr
 
-21,Dove Deeply Nourishing Body Wash,597be66d-bad7-4d63-94aa-d1ddbec87f68,175.00,2000,2027-03-10,https://placehold.co/400x400/4682B4/FFFFFF/png?text=DOVE+BODY+WASH,Moisturelock technology for soft skin,Dove
-22,Pears Pure & Gentle Soap (4-Pack),597be66d-bad7-4d63-94aa-d1ddbec87f68,190.00,4000,2027-02-01,https://placehold.co/400x400/F0E68C/000000/png?text=PEARS+SOAP+4PACK,Glycerin-based pure and gentle soap,Pears
+21,Dove Deeply Nourishing Body Wash,597be66d-bad7-4d63-94aa-d1ddbec87f68,175.00,2000,2027-03-10,https://ibb.co/Zpyz9R4T,Moisturelock technology for soft skin,Dove
+
+22,Pears Pure & Gentle Soap (4-Pack),597be66d-bad7-4d63-94aa-d1ddbec87f68,190.00,4000,2027-02-01,https://i.ibb.co/YBs5Kbt4/adghwhej.jpg,Glycerin-based pure and gentle soap,Pears

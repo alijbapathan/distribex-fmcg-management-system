@@ -105,3 +105,45 @@ export async function sendPasswordResetEmail(email: string, name: string, resetU
     return { sent: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
+
+export async function sendOrderConfirmationEmail(email: string, name: string, order: { id: string; totalAmount: string | number; items: any[] }): Promise<{ sent: boolean; error?: string }> {
+  if (!hasSmtpCredentials || !transporter) {
+    console.log(`[DEV MODE] Order confirmation would be sent to ${email}`);
+    console.log(`[DEV MODE] Order ID: ${order.id} - Amount: ${order.totalAmount}`);
+    return { sent: false, error: "SMTP not configured" };
+  }
+
+  const itemListHtml = (order.items || []).map((it: any) => `
+    <li>${it.name} x ${it.quantity} — ₹${it.price}</li>
+  `).join("");
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || "noreply@agency.com",
+    to: email,
+    subject: `Order Confirmation — ${order.id}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color:#059669">Order Confirmed</h2>
+        <p>Hi ${name},</p>
+        <p>Thanks for your order! Your order <strong>#${order.id}</strong> has been received and is being processed.</p>
+        <p><strong>Total:</strong> ₹${order.totalAmount}</p>
+        <p><strong>Items:</strong></p>
+        <ul>
+          ${itemListHtml}
+        </ul>
+        <p>We'll let you know when the order ships. If you have any questions, reply to this email.</p>
+        <hr style="margin:30px 0; border:none; border-top:1px solid #e5e7eb;">
+        <p style="color:#6b7280; font-size:14px;">Best regards,<br>HUL Distribution Agency Team</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Order confirmation email sent to ${email} for order ${order.id}`);
+    return { sent: true };
+  } catch (error) {
+    console.error('Failed to send order confirmation email:', error);
+    return { sent: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}

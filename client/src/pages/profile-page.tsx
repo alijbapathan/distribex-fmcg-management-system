@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigation } from "@/components/layout/navigation";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +11,13 @@ import { formatCurrency } from "@/lib/currency";
 import { Order } from "@shared/schema";
 import { User, Package, Clock, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
+import { ChangePasswordDialog } from "@/components/dialogs/change-password-dialog";
+import { DeleteAccountDialog } from "@/components/dialogs/delete-account-dialog";
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
@@ -283,22 +288,28 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <h4 className="font-medium text-foreground">Security</h4>
                       <div className="space-y-2">
-                        <Button variant="outline" size="sm" data-testid="button-change-password">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          data-testid="button-change-password"
+                          onClick={() => setChangePasswordOpen(true)}
+                        >
                           Change Password
                         </Button>
-                        <Button variant="outline" size="sm" data-testid="button-enable-2fa">
-                          Enable Two-Factor Authentication
-                        </Button>
+                        
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <h4 className="font-medium text-foreground">Data & Privacy</h4>
                       <div className="space-y-2">
-                        <Button variant="outline" size="sm" data-testid="button-download-data">
-                          Download My Data
-                        </Button>
-                        <Button variant="destructive" size="sm" data-testid="button-delete-account">
+                        
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          data-testid="button-delete-account"
+                          onClick={() => setDeleteAccountOpen(true)}
+                        >
                           Delete Account
                         </Button>
                       </div>
@@ -312,6 +323,16 @@ export default function ProfilePage() {
       </main>
 
       <Footer />
+
+      {/* Dialogs */}
+      <ChangePasswordDialog 
+        open={changePasswordOpen} 
+        onOpenChange={setChangePasswordOpen} 
+      />
+      <DeleteAccountDialog 
+        open={deleteAccountOpen} 
+        onOpenChange={setDeleteAccountOpen} 
+      />
     </div>
   );
 }
