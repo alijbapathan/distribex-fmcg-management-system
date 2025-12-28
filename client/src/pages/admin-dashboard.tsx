@@ -84,6 +84,19 @@ export default function AdminDashboard() {
     nearExpiryProducts: []
   };
 
+  const handleMetricClick = (index: number) => {
+    // 0: Revenue, 1: Orders, 2: Low Stock, 3: Near Expiry
+    if (index === 2) {
+      const el = document.getElementById('low-stock-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (index === 3) {
+      const el = document.getElementById('near-expiry-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (index === 1) {
+      setLocation('/admin/view-orders');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -95,8 +108,8 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Manage your grocery distribution system</p>
         </div>
 
-        {/* Key Metrics Cards */}
-        <MetricsCards stats={stats} />
+  {/* Key Metrics Cards */}
+  <MetricsCards stats={{...stats, onCardClick: handleMetricClick} as any} />
 
         {/* Charts Section */}
         <ChartsSection />
@@ -104,7 +117,7 @@ export default function AdminDashboard() {
         {/* Quick Actions and Tables */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
-          <Card className="border border-border">
+          <Card id="low-stock-section" className="border border-border">
             <CardHeader>
               <CardTitle className="text-lg font-semibold text-foreground">Quick Actions</CardTitle>
             </CardHeader>
@@ -168,7 +181,7 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Low Stock Alert */}
-          <Card className="border border-border">
+          <Card id="near-expiry-section" className="border border-border">
             <CardHeader>
               <CardTitle className="text-lg font-semibold text-foreground flex items-center">
                 <AlertTriangle className="mr-2 h-5 w-5 text-destructive" />

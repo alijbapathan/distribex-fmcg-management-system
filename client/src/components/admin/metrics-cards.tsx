@@ -12,6 +12,9 @@ interface MetricsCardsProps {
 }
 
 export function MetricsCards({ stats }: MetricsCardsProps) {
+  // Optional click handler for cards (index)
+  const onCardClick = (typeof (stats as any).onCardClick === 'function') ? (stats as any).onCardClick : undefined;
+
   const metrics = [
     {
       title: "Total Revenue",
@@ -54,7 +57,14 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {metrics.map((metric, index) => (
-        <Card key={index} className="border border-border" data-testid={`card-metric-${index}`}>
+        <Card
+          key={index}
+          className={`border border-border ${onCardClick ? 'cursor-pointer hover:shadow-md' : ''}`}
+          data-testid={`card-metric-${index}`}
+          onClick={onCardClick ? (() => onCardClick(index)) : undefined}
+          role={onCardClick ? 'button' : undefined}
+          tabIndex={onCardClick ? 0 : undefined}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>

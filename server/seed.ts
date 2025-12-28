@@ -1,3 +1,4 @@
+import "dotenv/config";
 // MARK: teacher-review - Seed script for demo data
 import { storage } from "./storage";
 import { scrypt, randomBytes } from "crypto";
@@ -89,7 +90,7 @@ export async function seedDatabase() {
         price: "60.00",
         stock: 5, // Low stock
         categoryId: personalCareCategory.id,
-        imageUrl: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400",
+        imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0FLv3Zd018zH8cV2OHBTHHbB8AlGe7N1LIg&s",
         expiryDate: nearExpiryDate,
         discountPercent: "20.00"
       }),
@@ -190,8 +191,12 @@ export async function seedDatabase() {
 }
 
 // Run seed if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seedDatabase()
-    .then(() => process.exit(0))
-    .catch(() => process.exit(1));
-}
+seedDatabase()
+  .then(() => {
+    console.log("✅ Seeding complete!");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("❌ Seeding failed:", err);
+    process.exit(1);
+  });

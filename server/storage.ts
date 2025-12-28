@@ -54,6 +54,7 @@ export interface IStorage {
   getOrder(id: string): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrderStatus(id: string, status: string): Promise<Order | undefined>;
+  updateOrderPaymentStatus(id: string, paymentStatus: string): Promise<Order | undefined>;
 
   // Analytics methods
   getOrderStats(): Promise<{ totalRevenue: number; totalOrders: number; averageOrder: number }>;
@@ -447,10 +448,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrder(order: InsertOrder): Promise<Order> {
-    const [newOrder] = await db
-      .insert(orders)
-      .values(order)
-      .returning();
+    // Perform the order creation inside a transaction so we can
+    // 1) verify stock for each item
+    // 2) decrement product stock atomically
+    // 3) insert the order
+    const [newOrder] = await db.transaction(async (tx) => {
+      // Validate and update each product's stock
+      const items = (order.items as any[]) || [];
+
+      for (const it of items) {
+        const productId = it.productId as string;
+        const quantity = Number(it.quantity) || 0;
+
+        // fetch current product row inside transaction
+        const [prod] = await tx.select().from(products).where(eq(products.id, productId));
+        if (!prod) {
+          throw new Error(`Product not found: ${productId}`);
+        }
+
+        if ((prod.stock ?? 0) < quantity) {
+          throw new Error(`Insufficient stock for product: ${prod.name || productId}`);
+        }
+
+        // decrement stock
+        await tx
+          .update(products)
+          .set({ stock: (prod.stock as number) - quantity, updatedAt: sql`CURRENT_TIMESTAMP` })
+          .where(eq(products.id, productId));
+      }
+
+      // Insert the order record
+      const [inserted] = await tx
+        .insert(orders)
+        .values(order)
+        .returning();
+
+      return [inserted];
+    });
+
     return newOrder;
   }
 
@@ -458,6 +493,28 @@ export class DatabaseStorage implements IStorage {
     const [order] = await db
       .update(orders)
       .set({ status, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(orders.id, id))
+      .returning();
+    return order || undefined;
+  }
+
+  async updateOrderPaymentStatus(id: string, paymentStatus: string): Promise<Order | undefined> {
+    // If paymentStatus becomes 'paid', also confirm the order
+    if (paymentStatus === 'paid') {
+      const [order] = await db.transaction(async (tx) => {
+        const [o] = await tx
+          .update(orders)
+          .set({ paymentStatus: 'paid', status: 'confirmed', updatedAt: sql`CURRENT_TIMESTAMP` })
+          .where(eq(orders.id, id))
+          .returning();
+        return [o];
+      });
+      return order || undefined;
+    }
+
+    const [order] = await db
+      .update(orders)
+      .set({ paymentStatus, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(orders.id, id))
       .returning();
     return order || undefined;

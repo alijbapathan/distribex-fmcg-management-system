@@ -86,19 +86,25 @@ export default function ViewOrdersPage() {
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
       const response = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ status }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update order status");
+        const text = await response.text().catch(() => response.statusText || "");
+        let message = text || response.statusText || "Failed to update order status";
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed && parsed.message) message = parsed.message;
+        } catch (e) {
+          // not json, keep text
+        }
+        throw new Error(message);
       }
 
-      return response.json();
+      const text = await response.text();
+      try { return JSON.parse(text); } catch { return text as any; }
     },
     onSuccess: () => {
       toast({
@@ -114,6 +120,40 @@ export default function ViewOrdersPage() {
         variant: "destructive",
       });
     },
+  });
+
+  const updatePaymentStatusMutation = useMutation({
+    mutationFn: async ({ orderId, paymentStatus }: { orderId: string; paymentStatus: string }) => {
+      const response = await fetch(`/api/orders/${orderId}/payment-status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ paymentStatus }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => response.statusText || "");
+        let message = text || response.statusText || "Failed to update payment status";
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed && parsed.message) message = parsed.message;
+        } catch (e) {
+          // not json
+        }
+        throw new Error(message);
+      }
+
+      const text = await response.text();
+      try { return JSON.parse(text); } catch { return text as any; }
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Payment status updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   });
 
   const handleStatusUpdate = (orderId: string, status: string) => {
@@ -272,9 +312,25 @@ export default function ViewOrdersPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge className={paymentStatusConfig[order.paymentStatus].color}>
-                              {paymentStatusConfig[order.paymentStatus].label}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className={paymentStatusConfig[order.paymentStatus].color}>
+                                {paymentStatusConfig[order.paymentStatus].label}
+                              </Badge>
+                              <Select
+                                value={order.paymentStatus}
+                                onValueChange={(ps) => updatePaymentStatusMutation.mutate({ orderId: order.id, paymentStatus: ps })}
+                                disabled={updatePaymentStatusMutation.status === "pending"}
+                              >
+                                <SelectTrigger className="w-[120px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="paid">Paid</SelectItem>
+                                  <SelectItem value="failed">Failed</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
@@ -289,6 +345,7 @@ export default function ViewOrdersPage() {
                               <Select
                                 value={order.status}
                                 onValueChange={(status) => handleStatusUpdate(order.id, status)}
+                                disabled={updateOrderStatusMutation.status === "pending"}
                               >
                                 <SelectTrigger className="w-[120px]">
                                   <SelectValue />

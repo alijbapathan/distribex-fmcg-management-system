@@ -87,6 +87,7 @@ export default function CheckoutPage() {
       return res.json();
     },
     onSuccess: () => {
+      // Default: treat as completed (for COD and card in future)
       setOrderPlaced(true);
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
@@ -134,13 +135,123 @@ export default function CheckoutPage() {
     const orderData = {
       items: orderItems,
       shippingAddress,
-      paymentStatus: data.paymentMethod === "cod" ? "pending" : "paid",
+      // Start as pending for payment; include paymentMethod so server can
+      // return a UPI payload when requested
+      paymentStatus: data.paymentMethod === "cod" ? "pending" : "pending",
+      paymentMethod: data.paymentMethod,
       totalAmount: total.toString(),
       discountAmount: discount.toString(),
       shippingAmount: shipping.toString(),
     };
 
-    placeOrderMutation.mutate(orderData);
+    // When mutating, pass an onSuccess override to handle UPI specially using form values
+    placeOrderMutation.mutate(orderData, {
+      onSuccess: async (created) => {
+        const payload = created as any;
+        const order = payload.order || payload;
+        const upi = payload.upi || (payload.order && payload.order.upi) || null;
+
+        if (data.paymentMethod === "upi" && upi) {
+          // If server returned a razorpay object, open Razorpay Checkout
+          if ((upi as any).razorpay_order_id || (created as any).razorpay) {
+            const rz = (created as any).razorpay || upi;
+            // load razorpay script dynamically
+            const loadScript = () => new Promise((resolve, reject) => {
+              if ((window as any).Razorpay) return resolve(true);
+              const script = document.createElement('script');
+              script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+              script.onload = () => resolve(true);
+              script.onerror = () => reject(new Error('Failed to load Razorpay script'));
+              document.body.appendChild(script);
+            });
+
+            try {
+              await loadScript();
+              const options = {
+                key: rz.key_id,
+                amount: rz.amount,
+                currency: rz.currency || 'INR',
+                name: 'Merchant',
+                description: 'Order Payment',
+                order_id: rz.razorpay_order_id,
+                handler: async (response: any) => {
+                  // verify on server
+                  try {
+                    await apiRequest('POST', '/api/payments/razorpay/verify', {
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_signature: response.razorpay_signature,
+                      orderId: order.id,
+                    });
+                    toast({ title: 'Payment confirmed', description: 'Your payment was confirmed and order is complete.' });
+                    setOrderPlaced(true);
+                    queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+                  } catch (e: any) {
+                    toast({ title: 'Payment verification failed', description: e?.message || 'Failed to verify payment', variant: 'destructive' });
+                  }
+                },
+                prefill: {
+                  name: form.getValues().fullName,
+                  contact: form.getValues().phone,
+                },
+                notes: { order_id: order.id }
+              } as any;
+
+              const rzp = new (window as any).Razorpay(options);
+              rzp.open();
+              return;
+            } catch (err: any) {
+              console.error('Razorpay flow failed, falling back to QR', err);
+            }
+          }
+
+          // fallback to existing QR/modal flow
+          setUpiOrderId(order.id);
+          setUpiPayload({ vpa: upi.vpa, upiUri: upi.upiUri, qrUrl: upi.qrUrl });
+          setShowUpiModal(true);
+          // do not mark orderPlaced or clear cart yet; wait for user to confirm
+          return;
+        }
+
+        // Otherwise, fallback to default success behavior
+        setOrderPlaced(true);
+        queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+        toast({
+          title: "Order placed successfully!",
+          description: "You will receive a confirmation email shortly.",
+        });
+      }
+    });
+  };
+
+  // UPI flow state
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [upiOrderId, setUpiOrderId] = useState<string | null>(null);
+  const [upiVpa, setUpiVpa] = useState("");
+  const [isProcessingUpi, setIsProcessingUpi] = useState(false);
+  // payload returned by server when client requests UPI payment
+  const [upiPayload, setUpiPayload] = useState<{ vpa: string; upiUri: string; qrUrl: string } | null>(null);
+
+  const handleConfirmUpiPayment = async () => {
+    if (!upiOrderId) return;
+    setIsProcessingUpi(true);
+    try {
+      const res = await apiRequest("PUT", `/api/orders/${upiOrderId}/payment-status`, { paymentStatus: "paid" });
+      // response may not return JSON via apiRequest wrapper, attempt to parse
+      try { await res.json(); } catch {}
+      toast({ title: "Payment confirmed", description: "Your payment was confirmed and order is complete." });
+      setShowUpiModal(false);
+      setOrderPlaced(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    } catch (err: any) {
+      toast({ title: "Payment failed", description: err?.message || "Failed to confirm payment", variant: "destructive" });
+    } finally {
+      setIsProcessingUpi(false);
+    }
   };
 
   const items = cartData?.items || [];
@@ -376,12 +487,12 @@ export default function CheckoutPage() {
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border border-border rounded-lg opacity-50">
-                      <RadioGroupItem value="upi" id="upi" disabled />
+                    <div className="flex items-center space-x-2 p-3 border border-border rounded-lg">
+                      <RadioGroupItem value="upi" id="upi" />
                       <Label htmlFor="upi" className="flex-1">
                         <div>
                           <p className="font-medium">UPI Payment</p>
-                          <p className="text-sm text-muted-foreground">Coming soon</p>
+                          <p className="text-sm text-muted-foreground">Pay using UPI (QR / VPA)</p>
                         </div>
                       </Label>
                     </div>
@@ -479,6 +590,53 @@ export default function CheckoutPage() {
             </div>
           </div>
         </form>
+        {/* UPI Modal (simple overlay) */}
+        {showUpiModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-card p-6 rounded-lg w-full max-w-xl">
+              <h3 className="text-lg font-semibold mb-2">Complete UPI Payment</h3>
+              <p className="text-sm text-muted-foreground mb-4">Scan the QR or pay to the merchant VPA shown below, then click Confirm Payment.</p>
+
+              {/* Merchant info and QR */}
+              <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Merchant VPA</p>
+                  <div className="font-mono font-semibold text-lg">{upiPayload?.vpa ?? 'merchant@upi'}</div>
+                  <p className="text-sm text-muted-foreground mt-2">Amount</p>
+                  <div className="font-semibold text-lg">{formatCurrency(total)}</div>
+                </div>
+                <div className="flex-1 flex items-center justify-center">
+                  {/* Use server-provided QR if available, otherwise fallback to client-generated QR */}
+                  {upiPayload ? (
+                    <img src={upiPayload.qrUrl} alt="UPI QR" className="w-48 h-48 rounded-md shadow" />
+                  ) : (
+                    (() => {
+                      const merchantVpa = 'merchant@upi';
+                      const upiUri = `upi://pay?pa=${encodeURIComponent(merchantVpa)}&pn=${encodeURIComponent('Merchant')}&am=${encodeURIComponent(total.toString())}&cu=INR`;
+                      const qrUrl = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(upiUri)}`;
+                      return (
+                        <img src={qrUrl} alt="UPI QR" className="w-48 h-48 rounded-md shadow" />
+                      );
+                    })()
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 mb-3">
+                <Label htmlFor="upiVpa">Enter your UPI VPA (payer)</Label>
+                <Input id="upiVpa" value={upiVpa} onChange={(e) => setUpiVpa(e.target.value)} placeholder="you@upi" />
+                <p className="text-xs text-muted-foreground mt-1">After making payment from your UPI app, click Confirm Payment to complete the order.</p>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setShowUpiModal(false)}>Cancel</Button>
+                <Button onClick={handleConfirmUpiPayment} disabled={isProcessingUpi || !upiVpa.includes('@')} data-testid="button-confirm-upi">
+                  {isProcessingUpi ? 'Processing...' : 'Confirm Payment'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />
