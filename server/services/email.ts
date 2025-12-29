@@ -6,8 +6,8 @@ const hasSmtpCredentials = process.env.SMTP_USER && process.env.SMTP_PASS;
 // Create transporter only if credentials are available
 const transporter = hasSmtpCredentials ? nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
+  port: parseInt(process.env.SMTP_PORT || "465"),
+  secure: true, // Use SSL (port 465) instead of TLS (port 587)
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -24,6 +24,7 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 
   const clientUrl = process.env.CLIENT_URL || "http://localhost:5000";
   const verificationUrl = `${clientUrl}/verify-email/${token}`;
+  console.log(`Attempting to send verification email to ${email} with URL: ${verificationUrl}`);
 
   const mailOptions = {
     from: process.env.EMAIL_FROM || "noreply@agency.com",
