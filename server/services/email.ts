@@ -3,16 +3,32 @@ import nodemailer from "nodemailer";
 // Check if SMTP credentials are available
 const hasSmtpCredentials = process.env.SMTP_USER && process.env.SMTP_PASS;
 
+// Prefer STARTTLS on 587 (more reliable on hosts like Render) unless explicitly forcing 465
+const smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
+const smtpSecure = process.env.SMTP_SECURE
+  ? process.env.SMTP_SECURE === "true"
+  : smtpPort === 465;
+
 // Create transporter only if credentials are available
-const transporter = hasSmtpCredentials ? nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT || "465"),
-  secure: true, // Use SSL (port 465) instead of TLS (port 587)
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-}) : null;
+const transporter = hasSmtpCredentials
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: smtpPort,
+      secure: smtpSecure, // false uses STARTTLS on 587, true uses SSL on 465
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      pool: true,
+      connectionTimeout: 15000,
+      socketTimeout: 15000,
+      greetingTimeout: 15000,
+      tls: {
+        // Allow turning off cert validation only if explicitly requested (some providers need it)
+        rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED === "false" ? false : true,
+      },
+    })
+  : null;
 
 export async function sendVerificationEmail(email: string, name: string, token: string): Promise<{ sent: boolean; error?: string }> {
   // If no SMTP credentials, simulate sending for development
