@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 
 // Check if SMTP credentials are available
 const hasSmtpCredentials = process.env.SMTP_USER && process.env.SMTP_PASS;
@@ -31,8 +32,8 @@ const transporter = hasSmtpCredentials
   : null;
 
 export async function sendVerificationEmail(email: string, name: string, token: string): Promise<{ sent: boolean; error?: string }> {
-  // If no SMTP credentials, simulate sending for development
-  if (!hasSmtpCredentials || !transporter) {
+  // Require either SMTP credentials or a SendGrid API key to actually send
+  if (!(hasSmtpCredentials || process.env.SENDGRID_API_KEY)) {
     console.log(`[DEV MODE] Verification email would be sent to ${email}`);
     console.log(`[DEV MODE] Verification URL: http://localhost:5000/verify-email/${token}`);
     return { sent: false, error: "SMTP not configured" };
@@ -72,7 +73,18 @@ export async function sendVerificationEmail(email: string, name: string, token: 
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    if (process.env.SENDGRID_API_KEY) {
+      if (!process.env.EMAIL_FROM) process.env.EMAIL_FROM = "noreply@agency.com";
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      await sgMail.send({
+        to: email,
+        from: process.env.EMAIL_FROM,
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+      });
+    } else {
+      await transporter.sendMail(mailOptions);
+    }
     console.log(`✅ Verification email sent to ${email}`);
     return { sent: true };
   } catch (error) {
@@ -89,8 +101,8 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 }
 
 export async function sendPasswordResetEmail(email: string, name: string, resetUrl: string): Promise<{ sent: boolean; error?: string }> {
-  // If no SMTP credentials, simulate sending for development
-  if (!hasSmtpCredentials || !transporter) {
+  // Require either SMTP credentials or a SendGrid API key to actually send
+  if (!(hasSmtpCredentials || process.env.SENDGRID_API_KEY)) {
     console.log(`[DEV MODE] Password reset email would be sent to ${email}`);
     console.log(`[DEV MODE] Reset URL: ${resetUrl}`);
     return { sent: false, error: "SMTP not configured" };
@@ -122,7 +134,18 @@ export async function sendPasswordResetEmail(email: string, name: string, resetU
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    if (process.env.SENDGRID_API_KEY) {
+      if (!process.env.EMAIL_FROM) process.env.EMAIL_FROM = "noreply@agency.com";
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      await sgMail.send({
+        to: email,
+        from: process.env.EMAIL_FROM,
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+      });
+    } else {
+      await transporter.sendMail(mailOptions);
+    }
     return { sent: true };
   } catch (error) {
     console.error("Failed to send password reset email:", error);
@@ -131,7 +154,7 @@ export async function sendPasswordResetEmail(email: string, name: string, resetU
 }
 
 export async function sendOrderConfirmationEmail(email: string, name: string, order: { id: string; totalAmount: string | number; items: any[] }): Promise<{ sent: boolean; error?: string }> {
-  if (!hasSmtpCredentials || !transporter) {
+  if (!(hasSmtpCredentials || process.env.SENDGRID_API_KEY)) {
     console.log(`[DEV MODE] Order confirmation would be sent to ${email}`);
     console.log(`[DEV MODE] Order ID: ${order.id} - Amount: ${order.totalAmount}`);
     return { sent: false, error: "SMTP not configured" };
@@ -163,7 +186,18 @@ export async function sendOrderConfirmationEmail(email: string, name: string, or
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    if (process.env.SENDGRID_API_KEY) {
+      if (!process.env.EMAIL_FROM) process.env.EMAIL_FROM = "noreply@agency.com";
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      await sgMail.send({
+        to: email,
+        from: process.env.EMAIL_FROM,
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+      });
+    } else {
+      await transporter.sendMail(mailOptions);
+    }
     console.log(`Order confirmation email sent to ${email} for order ${order.id}`);
     return { sent: true };
   } catch (error) {
