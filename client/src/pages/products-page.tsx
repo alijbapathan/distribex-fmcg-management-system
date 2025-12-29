@@ -204,13 +204,13 @@ export default function ProductsPage() {
             </div>
 
             {/* Loading State */}
-            {isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {isLoading && (
+                            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="bg-muted rounded-lg h-64 mb-4"></div>
-                    <div className="bg-muted rounded h-4 mb-2"></div>
-                    <div className="bg-muted rounded h-4 w-2/3"></div>
+                                        <div className="bg-muted rounded-lg h-48 sm:h-56 md:h-64 mb-3 sm:mb-4"></div>
+                                        <div className="bg-muted rounded h-3 sm:h-4 mb-2"></div>
+                                        <div className="bg-muted rounded h-3 sm:h-4 w-2/3"></div>
                   </div>
                 ))}
               </div>
@@ -241,7 +241,7 @@ export default function ProductsPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
                     {filteredProducts.map((product, index) => (
                       <motion.div
                         key={product.id}

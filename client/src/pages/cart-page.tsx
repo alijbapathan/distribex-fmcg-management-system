@@ -145,17 +145,17 @@ export default function CartPage() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" asChild data-testid="button-back-to-products">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-8">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <Button variant="ghost" size="sm" asChild data-testid="button-back-to-products" className="h-9 px-3 text-xs sm:text-sm">
               <Link href="/products">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Continue Shopping
               </Link>
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Shopping Cart</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">Shopping Cart</h1>
+              <p className="text-sm sm:text-base text-muted-foreground leading-snug">
                 {items.length} {items.length === 1 ? "item" : "items"} in your cart
               </p>
             </div>
@@ -163,6 +163,7 @@ export default function CartPage() {
           {items.length > 0 && (
             <Button
               variant="outline"
+              className="h-9 px-3 text-xs sm:text-sm"
               onClick={() => clearCartMutation.mutate()}
               disabled={clearCartMutation.isPending}
               data-testid="button-clear-cart"
@@ -193,7 +194,7 @@ export default function CartPage() {
             </Button>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2">
               <Card>
@@ -207,30 +208,30 @@ export default function CartPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="flex items-center space-x-4 p-4 border border-border rounded-lg"
+                      className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0 p-3 sm:p-4 border border-border rounded-lg"
                       data-testid={`cart-item-${item.product.id}`}
                     >
                       <img
                         src={item.product.imageUrl || "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=120&h=120&fit=crop"}
                         alt={item.product.name}
-                        className="w-20 h-20 object-cover rounded-lg"
+                        className="w-full max-w-[160px] sm:w-20 h-32 sm:h-20 object-cover rounded-lg"
                       />
                       
                       <div className="flex-1">
-                        <h3 className="font-semibold text-foreground" data-testid={`text-item-name-${item.product.id}`}>
+                        <h3 className="font-semibold text-sm sm:text-base text-foreground" data-testid={`text-item-name-${item.product.id}`}>
                           {item.product.name}
                         </h3>
                         {item.product.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                             {item.product.description}
                           </p>
                         )}
-                        <div className="flex items-center space-x-4 mt-2">
-                          <p className="text-sm font-medium">
+                        <div className="flex items-center space-x-3 sm:space-x-4 mt-2">
+                          <p className="text-xs sm:text-sm font-medium">
                             {formatCurrency(item.priceAtAdd)} each
                           </p>
                           {item.product.nearExpiry && (
-                            <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">
+                            <span className="text-[11px] sm:text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">
                               Near Expiry - {item.product.discountPercent}% OFF
                             </span>
                           )}
@@ -238,7 +239,7 @@ export default function CartPage() {
                       </div>
 
                       {/* Quantity Controls */}
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 sm:justify-start justify-between w-full sm:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
@@ -260,7 +261,7 @@ export default function CartPage() {
                               handleQuantityChange(item.product.id, newQuantity);
                             }
                           }}
-                          className="w-16 text-center"
+                          className="w-16 text-center h-9 text-sm"
                           data-testid={`input-quantity-${item.product.id}`}
                         />
                         <Button
@@ -276,8 +277,8 @@ export default function CartPage() {
                       </div>
 
                       {/* Item Total and Remove */}
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground" data-testid={`text-item-total-${item.product.id}`}>
+                      <div className="text-right self-end">
+                        <p className="font-semibold text-sm sm:text-base text-foreground" data-testid={`text-item-total-${item.product.id}`}>
                           {formatCurrency(parseFloat(item.priceAtAdd) * item.quantity)}
                         </p>
                         <Button
@@ -304,27 +305,27 @@ export default function CartPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <Card className="sticky top-24">
+                <Card className="lg:sticky lg:top-24">
                   <CardHeader>
-                    <CardTitle>Order Summary</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl">Order Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm sm:text-base">
                         <span className="text-muted-foreground">Subtotal</span>
                         <span className="font-medium" data-testid="text-subtotal">
                           {formatCurrency(subtotal)}
                         </span>
                       </div>
                       {discount > 0 && (
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span className="text-muted-foreground">Discount</span>
                           <span className="font-medium text-primary" data-testid="text-discount">
                             -{formatCurrency(discount)}
                           </span>
                         </div>
                       )}
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm sm:text-base">
                         <span className="text-muted-foreground">Shipping</span>
                         <span className="font-medium" data-testid="text-shipping">
                           {shipping === 0 ? "Free" : formatCurrency(shipping)}
@@ -339,13 +340,13 @@ export default function CartPage() {
                     
                     <Separator />
                     
-                    <div className="flex justify-between text-lg font-bold">
+                    <div className="flex justify-between text-lg sm:text-xl font-bold">
                       <span>Total</span>
                       <span data-testid="text-total">{formatCurrency(total)}</span>
                     </div>
 
                     <Button 
-                      className="w-full" 
+                      className="w-full h-11 text-sm sm:text-base" 
                       size="lg"
                       asChild
                       data-testid="button-proceed-checkout"

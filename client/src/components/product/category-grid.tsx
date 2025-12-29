@@ -47,7 +47,7 @@ export function CategoryGrid() {
         </p>
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+      <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
         {categories.map((category, index) => (
           <motion.div
             key={category.id}
@@ -58,14 +58,14 @@ export function CategoryGrid() {
             {/* 🚨 FIX APPLIED: Changed 'category' to 'categoryId' and used 'category.id' */}
             <Link href={`/products?categoryId=${category.id}`} data-testid={`link-category-${category.slug}`}>
               <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-0 bg-gradient-to-br hover:bg-gradient-to-t">
-                <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center justify-center h-full">
-                  <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br ${categoryColors[category.slug] || "from-primary/20 to-accent/20"} rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-shadow`}>
-                    <i className={`${categoryIcons[category.slug] || "fas fa-box"} text-xl sm:text-2xl ${getIconColor(category.slug)}`}></i>
+                <CardContent className="p-3 sm:p-5 text-center flex flex-col items-center justify-center h-full">
+                  <div className={`w-11 h-11 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br ${categoryColors[category.slug] || "from-primary/20 to-accent/20"} rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-shadow`}>
+                    <i className={`${categoryIcons[category.slug] || "fas fa-box"} text-lg sm:text-2xl ${getIconColor(category.slug)}`}></i>
                   </div>
                   <h3 className="font-semibold text-sm sm:text-base text-foreground mb-1 sm:mb-2 line-clamp-2" data-testid={`text-category-name-${category.slug}`}>
                     {category.name}
                   </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 hidden sm:block">
+                  <p className="text-[11px] sm:text-sm text-muted-foreground line-clamp-2 hidden sm:block">
                     {category.description}
                   </p>
                 </CardContent>

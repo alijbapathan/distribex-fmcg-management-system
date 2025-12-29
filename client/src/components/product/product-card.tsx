@@ -79,7 +79,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className="h-full"
     >
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 relative h-full flex flex-col card-hover" data-testid={`card-product-${product.id}`}>
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 relative h-full flex flex-col card-hover">
         {/* 🚨 FINAL FIX: Using a simple HTML anchor tag for navigation */}
         <a href={`/products/${product.id}`} className="block flex-1 flex flex-col">
           {/* Near Expiry Badge */}
@@ -103,7 +103,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
           )}
 
-          <div className="aspect-square overflow-hidden bg-muted">
+          <div className="aspect-[4/5] sm:aspect-square overflow-hidden bg-muted">
             <img 
               src={product.imageUrl || "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400&h=400&fit=crop"} 
               alt={product.name}
@@ -133,11 +133,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 {product.nearExpiry ? (
-                  <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                  <Badge variant="destructive" className="text-[10px] sm:text-xs px-2 py-0.5">
                     Near Expiry
                   </Badge>
                 ) : (
-                  <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5">
                     {product.stock > 0 ? `${product.stock}` : 'OOS'}
                   </Badge>
                 )}
@@ -149,7 +149,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         {/* Button is outside the anchor tag so clicking it only adds to cart */}
         <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-0">
           <Button 
-            className="w-full text-xs sm:text-sm h-9 sm:h-10 font-semibold transition-all" 
+            className="w-full text-[11px] sm:text-sm h-9 sm:h-10 font-semibold transition-all" 
             onClick={handleAddToCart}
             disabled={addToCartMutation.isPending || product.stock === 0}
             data-testid={`button-add-to-cart-${product.id}`}
