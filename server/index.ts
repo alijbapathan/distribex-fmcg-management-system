@@ -5,6 +5,31 @@ import { setupVite, serveStatic, log } from "./vite";
 
 
 const app = express();
+
+// CORS configuration
+app.use((req, res, next) => {
+  const origin = req.get("origin");
+  const allowedOrigins = [
+    "http://localhost:5000",
+    "http://localhost:3000",
+    process.env.CLIENT_URL,
+    "https://distribex-fmcg-management-system.onrender.com",
+  ].filter(Boolean);
+  
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.set("Access-Control-Allow-Origin", origin || "*");
+  }
+  
+  res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.set("Access-Control-Allow-Credentials", "true");
+  
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Capture rawBody for webhook signature verification
 app.use(express.json({ verify: (req: any, res, buf) => { req.rawBody = buf } }));
 app.use(express.urlencoded({ extended: false, verify: (req: any, res, buf) => { req.rawBody = buf } }));
