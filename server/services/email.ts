@@ -56,11 +56,18 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`Verification email sent to ${email}`);
+    console.log(`✅ Verification email sent to ${email}`);
     return { sent: true };
   } catch (error) {
-    console.error("Failed to send verification email:", error);
-    return { sent: false, error: error instanceof Error ? error.message : "Unknown error" };
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error(`❌ Failed to send verification email to ${email}:`, errorMsg);
+    console.error("SMTP Config:", {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER?.substring(0, 3) + "***",
+      hasPassword: !!process.env.SMTP_PASS
+    });
+    return { sent: false, error: errorMsg };
   }
 }
 
