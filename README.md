@@ -1,73 +1,112 @@
-Distribex - FMCG Management System
+Distribex – FMCG Distribution Management System
 
-Distribex is a robust, full-stack distribution management platform built to optimize FMCG supply chain operations. It automates critical business processes like inventory tracking, expiry management, and dynamic pricing based on product shelf-life.
+Distribex is a scalable, full-stack FMCG distribution management platform designed to streamline supply chain operations. It automates inventory control, expiry tracking, and dynamic pricing to minimize waste and improve operational efficiency.
+
+Built with a modern tech stack, Distribex focuses on real-world business automation, scalability, and clean system design.
 
 🚀 Key Features
+🔹 Inventory & Stock Management
 
-Automated Inventory Tracking: Real-time monitoring of stock levels with integrated alerts for low-stock items.
+Real-time inventory tracking with automated low-stock alerts
 
-Smart Expiry Management: Automated background jobs to detect products nearing their expiry dates.
+Centralized product and stock control for efficient operations
 
-Dynamic Discounting Logic: Automatically applies configurable discounts to near-expiry items to reduce waste and accelerate sales.
+🔹 Smart Expiry Management
 
-Multi-Role Dashboards: Role-Based Access Control (RBAC) providing tailored experiences for Admins, Staff, and Customers.
+Background cron jobs to detect near-expiry products
 
-Business Analytics: Visual insights into sales performance, revenue trends, and inventory health using interactive charts.
+Prevents revenue loss and reduces product wastage
 
-Complete E-commerce Workflow: Seamless product discovery, persistent shopping cart, and secure checkout process.
+🔹 Dynamic Discounting
+
+Automatic, configurable discounts applied based on product shelf-life
+
+Helps accelerate sales of time-sensitive inventory
+
+🔹 Role-Based Access Control (RBAC)
+
+Separate dashboards for Admin, Staff, and Customers
+
+Secure access control tailored to business roles
+
+🔹 Business Analytics
+
+Interactive dashboards showing sales, revenue, and inventory insights
+
+Enables data-driven decision making
+
+🔹 End-to-End E-commerce Workflow
+
+Product browsing and search
+
+Persistent shopping cart
+
+Secure checkout and order management
 
 🛠 Tech Stack
 
-Frontend: React.js, TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion.
+Frontend
 
-Backend: Node.js, Express.js.
+React.js
 
-Database: PostgreSQL (Neon Serverless).
+TypeScript
 
-ORM: Drizzle ORM for type-safe database interactions.
+Vite
 
-State Management: TanStack Query (React Query) for efficient data fetching and caching.
+Tailwind CSS
 
-Authentication: Passport.js with session-based persistent login.
+shadcn/ui
+
+Framer Motion
+
+Backend
+
+Node.js
+
+Express.js
+
+Database & ORM
+
+PostgreSQL (Neon Serverless)
+
+Drizzle ORM (type-safe queries & shared schema)
+
+State Management
+
+TanStack Query (React Query)
+
+Authentication
+
+Passport.js (session-based authentication)
 
 📦 Installation & Setup
-
-Clone the repository:
-
-git clone [https://github.com/yourusername/distribex-fmcg-system.git](https://github.com/yourusername/distribex-fmcg-system.git)
+1️⃣ Clone the repository
+git clone https://github.com/yourusername/distribex-fmcg-system.git
 cd distribex-fmcg-system
 
-
-Install dependencies:
-
+2️⃣ Install dependencies
 npm install
 
+3️⃣ Environment Variables
 
-Environment Variables:
-Create a .env file in the root directory and add your PostgreSQL connection string:
+Create a .env file in the root directory and add:
 
 DATABASE_URL=your_postgresql_connection_string
 
-
-Initialize the Database:
-
+4️⃣ Initialize Database
 npm run db:push
 
-
-Seed Demo Data:
-
+5️⃣ Seed Demo Data
 npm run seed
 
-
-Run the application:
-
+6️⃣ Run the application
 npm run dev
 
 
-The app will be available at http://localhost:5000.
+The application will be available at:
+👉 http://localhost:5000
 
-📈 Architecture
+📈 Architecture Overview
 
-The system follows a modern client-server architecture with a shared schema for end-to-end type safety. Scheduled cron jobs handle time-sensitive tasks like expiry checking, ensuring the business logic remains automated and reliable.
-
-Developed as a personal project to master scalable full-stack development and business automation.
+Distribex follows a modern client–server architecture with a shared schema for end-to-end type safety.
+Time-sensitive operations such as expiry detection and discount updates are handled using scheduled background jobs, ensuring automation and reliability across business workflows.
